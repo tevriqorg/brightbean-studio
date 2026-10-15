@@ -297,9 +297,7 @@ TSIDP_CLIENT_SECRET = env("TSIDP_CLIENT_SECRET", default="").strip()
 if TSIDP_ENABLED and not (TSIDP_ISSUER and TSIDP_CLIENT_ID and TSIDP_CLIENT_SECRET):
     from django.core.exceptions import ImproperlyConfigured
 
-    raise ImproperlyConfigured(
-        "TSIDP_ENABLED requires TSIDP_ISSUER, TSIDP_CLIENT_ID, and TSIDP_CLIENT_SECRET"
-    )
+    raise ImproperlyConfigured("TSIDP_ENABLED requires TSIDP_ISSUER, TSIDP_CLIENT_ID, and TSIDP_CLIENT_SECRET")
 
 # Unsplash stock-photo search in the composer (optional; empty disables the feature)
 UNSPLASH_ACCESS_KEY = env("UNSPLASH_ACCESS_KEY", default="")
