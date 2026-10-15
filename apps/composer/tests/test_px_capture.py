@@ -63,9 +63,7 @@ class PXCaptureTests(TestCase):
             description="raw idea",
             author=self.user,
         )
-        response = self.client.get(
-            reverse("composer:create_landing", kwargs={"workspace_id": self.workspace.id})
-        )
+        response = self.client.get(reverse("composer:create_landing", kwargs={"workspace_id": self.workspace.id}))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "AI 处理")
 
@@ -85,9 +83,7 @@ class PXCaptureTests(TestCase):
         )
         llm_response = Mock()
         llm_response.raise_for_status.return_value = None
-        llm_response.json.return_value = {
-            "choices": [{"message": {"content": "AI太快，超过三个会话我就跟不上了。"}}]
-        }
+        llm_response.json.return_value = {"choices": [{"message": {"content": "AI太快，超过三个会话我就跟不上了。"}}]}
         mock_post.return_value = llm_response
 
         response = self.client.post(
