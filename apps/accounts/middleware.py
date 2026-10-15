@@ -1,5 +1,6 @@
 import hashlib
 
+from django.conf import settings
 from django.core.cache import cache
 from django.http import HttpResponse
 from django.shortcuts import redirect
@@ -31,6 +32,30 @@ EXEMPT_PATH_PREFIXES = (
     "/media/",
     "/admin/",
 )
+
+
+TSIDP_ALLOWED_ACCOUNT_PREFIXES = (
+    "/accounts/oidc/tsidp/",
+    "/accounts/logout/",
+    "/accounts/3rdparty/",
+    "/accounts/accept-terms/",
+)
+
+
+class TsidpOnlyAuthMiddleware:
+    """Remove Studio's local auth surface when tsidp is authoritative."""
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        if (
+            settings.TSIDP_ENABLED
+            and request.path.startswith("/accounts/")
+            and not request.path.startswith(TSIDP_ALLOWED_ACCOUNT_PREFIXES)
+        ):
+            return redirect(settings.LOGIN_URL)
+        return self.get_response(request)
 
 
 class TosAcceptanceMiddleware:

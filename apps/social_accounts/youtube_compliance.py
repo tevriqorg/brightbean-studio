@@ -2,7 +2,6 @@
 
 import logging
 from datetime import timedelta
-from zoneinfo import ZoneInfo
 
 from background_task import background
 from django.db import transaction
@@ -210,7 +209,7 @@ def _delete_expired(account, now):
         data__platform_post_id__in=[str(pk) for pk in account.platform_posts.values_list("pk", flat=True)],
         created_at__lte=cutoff,
     ).delete()
-    history_start = now.astimezone(ZoneInfo("America/Los_Angeles")).date() - timedelta(days=HISTORY_DAYS)
+    history_start = now.date() - timedelta(days=HISTORY_DAYS)
     AccountInsightsSnapshot.objects.filter(social_account=account, date__lt=history_start).delete()
     latest = (
         PostInsightsSnapshot.objects.filter(

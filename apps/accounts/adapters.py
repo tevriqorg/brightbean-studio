@@ -46,8 +46,9 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
         first_name = data.get("first_name", "")
         last_name = data.get("last_name", "")
         full_name = f"{first_name} {last_name}".strip()
-        if full_name and not user.name:
-            user.name = full_name
+        display_name = full_name or data.get("name") or data.get("username") or ""
+        if display_name and not user.name:
+            user.name = display_name
         return user
 
     def save_user(self, request, sociallogin, form=None):

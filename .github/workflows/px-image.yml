@@ -1,0 +1,27 @@
+name: PX image
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/px-workbench-mvp
+
+permissions:
+  contents: read
+
+jobs:
+  build-image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build PX image
+        run: docker build -t px-brightbean:${GITHUB_SHA} .
+      - name: Save image
+        run: docker save px-brightbean:${GITHUB_SHA} | gzip -1 > px-brightbean-image.tar.gz
+      - name: Upload image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: px-brightbean-image-${{ github.sha }}
+          path: px-brightbean-image.tar.gz
+          retention-days: 14
+          compression-level: 0

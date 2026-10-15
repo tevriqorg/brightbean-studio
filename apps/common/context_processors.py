@@ -1,5 +1,6 @@
 """Context processors for sidebar and global template data."""
 
+from django.conf import settings
 from django.db.models import Count, Q
 
 
@@ -142,6 +143,7 @@ def sidebar_context(request):
         "sidebar_idea_tags": sidebar_idea_tags,
         "analytics_enabled_platforms": analytics_enabled_platforms,
         "show_review_banner": show_review_banner,
+        "px_mode": settings.PX_MODE,
     }
 
 

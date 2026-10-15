@@ -396,14 +396,14 @@
 
     <!-- Page header -->
     <div class="w-full min-h-[60px] inline-flex flex-row justify-between items-center px-6 pt-6 pb-0 mb-6">
-        <h1 class="text-2xl font-semibold text-stone-900" style="letter-spacing: -0.01em;">Create</h1>
+        <h1 class="text-2xl font-semibold text-stone-900" style="letter-spacing: -0.01em;">{% if px_mode %}收集箱{% else %}Create{% endif %}</h1>
 
         <!-- + New Idea -->
         <button x-show="activeTab === 'ideas'" x-cloak
                 @click="showCreateModal = true; createSelectedGroup = _defaultGroupId"
                 class="inline-flex items-center gap-1.5 px-4 py-1.5 text-sm font-semibold text-orange-600 bg-orange-50 border border-orange-200 rounded-full hover:bg-orange-100 hover:border-orange-300 active:bg-orange-100 transition-all duration-150 cursor-pointer">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-            New Idea
+            {% if px_mode %}记一条{% else %}New Idea{% endif %}
         </button>        
     </div>
 
@@ -414,8 +414,9 @@
         <div class="flex items-center gap-1 -mb-px">
             <button @click="activeTab = 'ideas'"
                     class="create-tab" :class="activeTab === 'ideas' && 'active'">
-                Ideas
+                {% if px_mode %}原始想法{% else %}Ideas{% endif %}
             </button>
+            {% if not px_mode %}
             <button @click="activeTab = 'templates'"
                     class="create-tab" :class="activeTab === 'templates' && 'active'">
                 Templates
@@ -424,8 +425,10 @@
                     class="create-tab" :class="activeTab === 'feeds' && 'active'">
                 Feeds
             </button>
+            {% endif %}
         </div>
 
+        {% if not px_mode %}
         <div class="flex items-center gap-3 ml-auto">
             <!-- Tag filter -->
             {% if active_tag %}
@@ -505,6 +508,7 @@
                 </div>
             </div>
         </div>
+        {% endif %}
     </div>
 
     <!-- Tab content -->
@@ -583,7 +587,8 @@
 
                 <!-- Header -->
                 <div class="idea-modal-header">
-                    <h2 class="text-lg font-semibold" style="color: var(--text-primary);">Create Idea</h2>
+                    <h2 class="text-lg font-semibold" style="color: var(--text-primary);">{% if px_mode %}记一条{% else %}Create Idea{% endif %}</h2>
+                    {% if not px_mode %}
                     <div class="flex items-center gap-2">
                         <!-- Column selector dropdown -->
                         <div class="relative" @click.away="createGroupDropdownOpen = false">
@@ -653,6 +658,7 @@
                             </div>
                         </div>
                     </div>
+                    {% endif %}
                 </div>
 
                 <!-- Selected tags chips -->
@@ -671,8 +677,12 @@
 
                 <!-- Body -->
                 <div class="idea-modal-body" @click="createGroupDropdownOpen = false; createTagDropdownOpen = false">
+                    {% if px_mode %}
+                    <textarea name="description" required class="idea-desc-input min-h-[180px]" placeholder="写下原始想法即可，不用起标题，不用整理。"></textarea>
+                    {% else %}
                     <input type="text" name="title" required class="idea-title-input" placeholder="Give your idea a title">
                     <textarea name="description" class="idea-desc-input" placeholder="Let it flow... or"></textarea>
+                    {% endif %}
                     <input type="file" name="media" x-ref="ideaFileInput" accept="image/*,video/*,.gif" style="display:none" multiple
                            @change="_handleFileSelect($event)">
 
@@ -742,7 +752,7 @@
                             :class="(createMediaUploadCount > 0 || isCreateSaving) && 'opacity-50 cursor-not-allowed'"
                             class="btn-neutral px-5 py-2 text-sm font-medium rounded-full cursor-pointer"
                             style="background: var(--neutral-100); color: var(--text-primary);">
-                        Create Post
+                        {% if px_mode %}AI 处理{% else %}Create Post{% endif %}
                     </button>
                     <button type="submit"
                             :disabled="createMediaUploadCount > 0 || isCreateSaving"
@@ -917,7 +927,7 @@
                             :class="(editMediaUploadCount > 0 || isEditSaving) && 'opacity-50 cursor-not-allowed'"
                             class="btn-neutral px-5 py-2 text-sm font-medium rounded-full cursor-pointer"
                             style="background: var(--neutral-100); color: var(--text-primary);">
-                        Create Post
+                        {% if px_mode %}AI 处理{% else %}Create Post{% endif %}
                     </button>
                     <button type="submit"
                             :disabled="editMediaUploadCount > 0 || isEditSaving"
