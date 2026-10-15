@@ -2864,7 +2864,11 @@ def idea_create(request, workspace_id):
     tags = parse_and_truncate_tag_string(request.POST.get("tags", ""))
 
     if not title:
-        return HttpResponse("Title is required.", status=400)
+        if settings.PX_MODE and description:
+            compact = " ".join(description.split())
+            title = compact[:72] + ("…" if len(compact) > 72 else "")
+        else:
+            return HttpResponse("Title is required.", status=400)
 
     # Assign to the specified group or default to the first group
     group_id = request.POST.get("group")

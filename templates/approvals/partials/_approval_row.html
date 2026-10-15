@@ -5,7 +5,7 @@ can_approve, display_timezone, and the parent Alpine scope (selectedPosts, diffO
 {% endcomment %}
 {% load tz approval_extras %}
 <div class="bg-white border border-stone-200 rounded-xl hover:border-stone-300 transition-colors"
-     x-data="{ expanded: false, panel: null, comment: '' }">
+     x-data="{ expanded: false, panel: null, comment: '', copied: false }">
     <div class="flex items-start gap-3 p-4">
         {% if can_approve and post.is_actionable %}
         <input type="checkbox" :value="'{{ post.id }}'" x-model="selectedPosts"
@@ -53,7 +53,14 @@ can_approve, display_timezone, and the parent Alpine scope (selectedPosts, diffO
 
             {# expanded preview #}
             <div x-show="expanded" x-cloak class="mt-3 pt-3 border-t border-stone-100 anim-collapse">
-                <p class="text-[0.8125rem] text-stone-600 whitespace-pre-wrap mb-3">{{ post.caption }}</p>
+                <p x-ref="caption" class="text-[0.8125rem] text-stone-600 whitespace-pre-wrap mb-3">{{ post.caption }}</p>
+                {% if px_mode %}
+                <button type="button"
+                        @click="navigator.clipboard.writeText($refs.caption.textContent.trim()).then(() => { copied = true; setTimeout(() => copied = false, 1400) })"
+                        class="mb-3 px-3 py-1.5 text-[0.75rem] font-semibold rounded-full border border-stone-200 text-stone-600 hover:bg-stone-50 transition-colors">
+                    <span x-text="copied ? '已复制' : '复制成稿'"></span>
+                </button>
+                {% endif %}
                 {% if post.media_attachments.all %}
                 <div class="flex gap-2 mb-3 flex-wrap">
                     {% for pm in post.media_attachments.all %}
