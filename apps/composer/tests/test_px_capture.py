@@ -27,7 +27,8 @@ class PXCaptureTests(TestCase):
             user=self.user,
             workspace=self.workspace,
             workspace_role=WorkspaceMembership.WorkspaceRole.OWNER,
-        )        self.client.force_login(self.user)
+        )
+        self.client.force_login(self.user)
         self.create_url = reverse(
             "composer:idea_create",
             kwargs={"workspace_id": self.workspace.id},
