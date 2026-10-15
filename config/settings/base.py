@@ -41,6 +41,7 @@ THIRD_PARTY_APPS = [
     "allauth.account",
     "allauth.socialaccount",
     "allauth.socialaccount.providers.google",
+    "allauth.socialaccount.providers.openid_connect",
     "django_htmx",
     "tailwind",
     "csp",
@@ -287,6 +288,19 @@ AUTHENTICATION_BACKENDS = [
 GOOGLE_AUTH_CLIENT_ID = env("GOOGLE_AUTH_CLIENT_ID", default="")
 GOOGLE_AUTH_CLIENT_SECRET = env("GOOGLE_AUTH_CLIENT_SECRET", default="")
 
+# PX can delegate interactive authentication entirely to a tailnet tsidp OIDC
+# server. Secrets live only in deployment env; never commit them.
+TSIDP_ENABLED = env.bool("TSIDP_ENABLED", default=False)
+TSIDP_ISSUER = env("TSIDP_ISSUER", default="").strip().rstrip("/")
+TSIDP_CLIENT_ID = env("TSIDP_CLIENT_ID", default="").strip()
+TSIDP_CLIENT_SECRET = env("TSIDP_CLIENT_SECRET", default="").strip()
+if TSIDP_ENABLED and not (TSIDP_ISSUER and TSIDP_CLIENT_ID and TSIDP_CLIENT_SECRET):
+    from django.core.exceptions import ImproperlyConfigured
+
+    raise ImproperlyConfigured(
+        "TSIDP_ENABLED requires TSIDP_ISSUER, TSIDP_CLIENT_ID, and TSIDP_CLIENT_SECRET"
+    )
+
 # Unsplash stock-photo search in the composer (optional; empty disables the feature)
 UNSPLASH_ACCESS_KEY = env("UNSPLASH_ACCESS_KEY", default="")
 
@@ -301,11 +315,34 @@ SOCIALACCOUNT_PROVIDERS = {
         "VERIFIED_EMAIL": True,
     },
 }
+if TSIDP_ENABLED:
+    SOCIALACCOUNT_PROVIDERS["openid_connect"] = {
+        "OAUTH_PKCE_ENABLED": True,
+        "APPS": [
+            {
+                "provider_id": "tsidp",
+                "name": "Tailscale",
+                "client_id": TSIDP_CLIENT_ID,
+                "secret": TSIDP_CLIENT_SECRET,
+                "settings": {
+                    "server_url": TSIDP_ISSUER,
+                    "fetch_userinfo": True,
+                    "oauth_pkce_enabled": True,
+                    "token_auth_method": "client_secret_basic",
+                    "uid_field": "sub",
+                },
+            }
+        ],
+    }
 
 SOCIALACCOUNT_EMAIL_AUTHENTICATION = True
 SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True
 SOCIALACCOUNT_AUTO_SIGNUP = True
-SOCIALACCOUNT_LOGIN_ON_GET = False
+SOCIALACCOUNT_LOGIN_ON_GET = TSIDP_ENABLED
+SOCIALACCOUNT_ONLY = TSIDP_ENABLED
+if TSIDP_ENABLED:
+    LOGIN_URL = "/accounts/oidc/tsidp/login/"
+    ACCOUNT_LOGOUT_REDIRECT_URL = LOGIN_URL
 ACCOUNT_ADAPTER = "apps.accounts.adapters.AccountAdapter"
 SOCIALACCOUNT_ADAPTER = "apps.accounts.adapters.SocialAccountAdapter"
 
