@@ -70,6 +70,45 @@ MAX_CSV_UPLOAD_BYTES = 5 * 1024 * 1024  # 5 MB cap on CSV planner imports
 _QUEUE_FULL_MSG = "No open posting slot within the scheduling horizon — add posting slots or free one up."
 
 
+def _px_edit_idea(raw_text: str) -> str:
+    """Compress one raw PX idea into a candidate post without mutating the idea."""
+    if not settings.PX_LLM_URL:
+        raise RuntimeError("PX AI editor is not configured")
+
+    system = (
+        "你是 PX 的中文编辑。你的工作是压缩和澄清，不是扩写。"
+        "保留原意、语气和关键事实，不添加用户没说过的信息。"
+        "能短则短，中文优先控制在 140 字以内，确有必要也不要超过 280 字。"
+        "只输出最终成稿，不解释，不加标题，不加引号。"
+    )
+    payload = {
+        "model": settings.PX_LLM_MODEL,
+        "messages": [
+            {"role": "system", "content": system},
+            {"role": "user", "content": raw_text.strip()},
+        ],
+        "max_tokens": 768,
+        "temperature": 0.2,
+    }
+    try:
+        response = httpx.post(
+            f"{settings.PX_LLM_URL}/chat/completions",
+            json=payload,
+            timeout=settings.PX_LLM_TIMEOUT,
+        )
+        response.raise_for_status()
+        data = response.json()
+    except (httpx.HTTPError, ValueError) as exc:
+        raise RuntimeError(f"PX AI editor unavailable: {exc}") from exc
+
+    choices = data.get("choices") or []
+    message = (choices[0].get("message") or {}) if choices else {}
+    candidate = (message.get("content") or "").strip()
+    if not candidate:
+        raise RuntimeError("PX AI editor returned no candidate text")
+    return candidate[:1000]
+
+
 def _get_workspace(request, workspace_id):
     """Resolve workspace and enforce membership check."""
     workspace = get_object_or_404(Workspace, id=workspace_id)
@@ -3054,11 +3093,19 @@ def idea_create_post(request, workspace_id, idea_id):
     )
 
     with transaction.atomic():
+        caption = idea.description or ""
+        if settings.PX_MODE:
+            try:
+                caption = _px_edit_idea(caption)
+            except RuntimeError as exc:
+                logger.warning("PX AI processing failed for idea %s: %s", idea.id, exc)
+                return JsonResponse({"ok": False, "error": str(exc)}, status=502)
+
         post = Post.objects.create(
             workspace=workspace,
             author=request.user,
             title=idea.title or "",
-            caption=idea.description or "",
+            caption=caption,
             tags=tags,
         )
 

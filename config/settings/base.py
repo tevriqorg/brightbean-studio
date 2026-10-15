@@ -22,6 +22,9 @@ DEBUG = env("DEBUG")
 ALLOWED_HOSTS = env("ALLOWED_HOSTS")
 APP_URL = env("APP_URL")
 PX_MODE = env.bool("PX_MODE", default=False)
+PX_LLM_URL = env("PX_LLM_URL", default="").strip().rstrip("/")
+PX_LLM_MODEL = env("PX_LLM_MODEL", default="auto").strip() or "auto"
+PX_LLM_TIMEOUT = env.float("PX_LLM_TIMEOUT", default=45.0)
 
 # Application definition
 
