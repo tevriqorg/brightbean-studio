@@ -61,7 +61,7 @@ class PXCaptureTests(TestCase):
             workspace=self.workspace,
             title="raw",
             description="raw idea",
-            created_by=self.user,
+            author=self.user,
         )
         response = self.client.get(
             reverse("composer:create_landing", kwargs={"workspace_id": self.workspace.id})
@@ -81,7 +81,7 @@ class PXCaptureTests(TestCase):
             workspace=self.workspace,
             title="raw",
             description="AI跑得太快，我同时处理三个以上会话就跟不上了。",
-            created_by=self.user,
+            author=self.user,
         )
         llm_response = Mock()
         llm_response.raise_for_status.return_value = None
